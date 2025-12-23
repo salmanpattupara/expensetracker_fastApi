@@ -13,7 +13,6 @@ class TransactionBase(BaseModel):
 
     
 class TransactionCreate(TransactionBase):
-
     
     @field_validator("date")
     @classmethod

@@ -43,15 +43,18 @@ async def new_transaction(transaction:schemas.TransactionCreate,db:Session=Depen
         return HTTPException(status_code=500,detail=f"some error occured {e}")
     
 @router.get("/{id}")
-async def get_transaction():
+async def get_transaction(id:int,db:Session=Depends(get_db)):
     try:
-        pass
+        result=db.query(models.Transaction).filter(models.Transaction.id==id).first()
+        if not result:
+            return HTTPException(status_code=404,detail="not found")
+        return result
     except Exception as e:
-        return HTTPException(status_code=500,detail=f"some error occured {e}")
+        return HTTPException(status_code=400,detail=f"bad request")
     
     
 @router.put("/{id}")
-async def edit_transaction():
+async def edit_transaction(db:Session=Depends(get_db)):
     try:
         pass
     except Exception as e:
