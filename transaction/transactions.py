@@ -54,15 +54,33 @@ async def get_transaction(id:int,db:Session=Depends(get_db)):
     
     
 @router.put("/{id}")
-async def edit_transaction(db:Session=Depends(get_db)):
+async def edit_transaction(id:int,transaction:schemas.TrasactionUpdate,db:Session=Depends(get_db)):
     try:
-        pass
+        result=db.query(models.Transaction).filter(models.Transaction.id==id).first()
+        if not result:
+            return HTTPException(status_code=404,detail="not found")
+        update_data=transaction.model_dump(exclude_unset=True)
+        for field,value in update_data.items():
+            setattr(result,field,value)
+        try:
+            db.commit()
+            db.refresh(result)
+            return result
+        except:
+            return HTTPException(status_code=500,detail="something went wrong")
+        
+
     except Exception as e:
         return HTTPException(status_code=500,detail=f"some error occured {e}")
     
 @router.delete("/{id}")
-async def delete_transaction():
+async def delete_transaction(id:int,db:Session=Depends(get_db)):
     try:
-        pass
+        result=db.query(models.Transaction).filter(models.Transaction.id==id).first()
+        if not result:
+            return HTTPException(status_code=404,detail="not found")
+        db.delete(result)
+        db.commit()
+        return {"message":"deleted successfully "}
     except Exception as e:
         return HTTPException(status_code=500,detail=f"some error occured {e}")

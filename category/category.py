@@ -33,7 +33,7 @@ async def get_category(id:int,db:Session=Depends(get_db)):
     except Exception as e:
         return HTTPException(status_code=500,detail=f"some error occured {e}")
 
-#aiop add new category
+#add new category
 @router.post("/")
 async def add_category(category:schemas.CategoryBase,db:Session=Depends(get_db)):
     try:
@@ -68,7 +68,7 @@ async def update_category(id:int,category:schemas.CategoryBase,db:Session=Depend
       
 #delete category
 @router.delete("/{id}",status_code=200)
-async def delete_category(id:int,category:schemas.CategoryBase,db:Session=Depends(get_db)):
+async def delete_category(id:int,db:Session=Depends(get_db)):
     try:
         db_cat=db.query(models.Category).filter(models.Category.id==id).first()
         if not db_cat:

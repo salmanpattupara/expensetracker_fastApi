@@ -20,8 +20,17 @@ class TransactionCreate(TransactionBase):
         if v > date.today():
             raise ValueError("Transaction date cannot be in the future")
         return v
+    
+
 # class TransactionResponse(TransactionBase):
    
 
 #     class Config:
 #         orm_mode = True
+
+class TrasactionUpdate(TransactionBase):
+    amount:int
+    type:TransactionType
+    description:str
+    date:date #user input date
+    category_id:Optional[int]
