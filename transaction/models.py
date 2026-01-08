@@ -18,15 +18,19 @@ class Transaction(Base):
 	__tablename__ = "transactions"
 
 	id = Column(Integer, primary_key=True, index=True)
+	user_id=Column(Integer,ForeignKey("users.id"))
 	description = Column(String, nullable=True)
 	amount = Column(Integer, nullable=False)
 	type = Column(SQLEnum(TransactionType, name="transaction_type"), nullable=False)
-	category_id=Column(Integer,ForeignKey("category.id",ondelete="SET NULL"),nullable=True)
+	category_id=Column(Integer,ForeignKey("user_category.id",ondelete="SET NULL"),nullable=True)
 	date = Column(Date, nullable=False)
 	created_at = Column(DateTime, default=datetime.now, nullable=False)
 	updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
  
-	category = relationship("Category", back_populates="transactions")
+ 
+	user_category = relationship("User_category", back_populates="transactions")
+	user = relationship("User", back_populates="transactions")
+
  
 	
  

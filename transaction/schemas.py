@@ -10,9 +10,22 @@ class TransactionBase(BaseModel):
     description:str
     date:date #user input date
     category_id:Optional[int]
+    
+class TransactionResponse(BaseModel):
+    amount:int
+    type:TransactionType
+    description:str
+    date:date #user input date
+    category_id:Optional[int]
 
     
 class TransactionCreate(TransactionBase):
+    amount:int
+    type:TransactionType
+    description:str
+    date:date #user input date
+    category_id:Optional[int]   
+    
     
     @field_validator("date")
     @classmethod
