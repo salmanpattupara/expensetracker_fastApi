@@ -1,7 +1,7 @@
 from calendar import monthrange
 from datetime import datetime,date, timedelta
 from fastapi import APIRouter, Query, Response,status,HTTPException,Depends
-from sqlalchemy import func
+from sqlalchemy import extract, func
 from sqlalchemy.orm import Session
 import transaction.models as models
 import transaction.schemas as schemas
@@ -24,7 +24,7 @@ async def transactions(db:Session=Depends(get_db),current_user = Depends(get_cur
     try:
         result=db.query(models.Transaction).filter(models.Transaction.user_id==current_user['id']).all()
         if not result:
-            return HTTPException(status_code=200,detail="no transaction")
+            return HTTPException(status_code=status.HTTP_204_NO_CONTENT,detail="no transaction")
         return result
     except Exception as e:
         return HTTPException(status_code=500,detail=f"some error occured {e}")
@@ -61,7 +61,7 @@ async def get_transaction(id:int,current_user = Depends(get_current_user),db:Ses
     try:
         result=db.query(models.Transaction).filter(models.Transaction.id==id,models.Transaction.user_id==current_user['id']).first()
         if not result:
-            return HTTPException(status_code=404,detail="not found")
+            return HTTPException(status_code=status.HTTP_204_NO_CONTENT,detail="not found")
         return result
     except Exception as e:
         return HTTPException(status_code=400,detail=f"bad request")
@@ -72,7 +72,8 @@ async def edit_transaction(id:int,transaction:schemas.TrasactionUpdate,current_u
     if current_user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="unauthorized user")
     try:
-        result=db.query(models.Transaction).filter(models.Transaction.id==id,models.Transaction.user_id==current_user['id']).first()
+        result=db.query(models.Transaction).filter(models.Transaction.id==id,
+                                                   models.Transaction.user_id==current_user['id']).first()
         if not result:
             return HTTPException(status_code=status.HTTP_204_NO_CONTENT,detail="not found")
         update_data=transaction.model_dump(exclude_unset=True)
@@ -111,6 +112,7 @@ async def delete_transaction(id:int,db:Session=Depends(get_db),current_user = De
 async def get_monthly_transactions(
     year: int = Query(..., example=2025),
     month: int = Query(..., ge=1, le=12),
+    current_user = Depends(get_current_user),
     db:Session=Depends(get_db)):
     
     start_date = datetime(year, month, 1)
@@ -119,21 +121,21 @@ async def get_monthly_transactions(
 
     try:
         transactions=db.query(models.Transaction).filter(
-            models.Transaction.created_at >= start_date,
-            models.Transaction.created_at <= end_date
-        ).all()
+            models.Transaction.user_id==current_user['id'],
+            extract("year",  models.Transaction.created_at)==year,
+            extract("month", models.Transaction.created_at) == month).all()
         
         total_amount = (
         db.query(func.coalesce(func.sum(models.Transaction.amount), 0))
         .filter(
-           
-            models.Transaction.created_at >= start_date,
-            models.Transaction.created_at <= end_date,
+             models.Transaction.user_id==current_user['id'],
+            extract("year",  models.Transaction.created_at)==year,
+            extract("month", models.Transaction.created_at) == month
         )
         .scalar()
     )
         if not transactions:
-            return HTTPException(status_code=200,detail="no transaction")
+            return HTTPException(status_code=status.HTTP_204_NO_CONTENT,detail="no transaction")
         return {
              year: year,
              month: month,
@@ -150,7 +152,7 @@ async def get_monthly_transactions(
 async def get_day_transactions(
      date_: date = Query(..., alias="date", example="2025-01-20"),
     db: Session = Depends(get_db),
-
+     current_user = Depends(get_current_user),
    ):
     
     start_datetime = datetime.combine(date_, datetime.min.time())
@@ -159,7 +161,8 @@ async def get_day_transactions(
     try:
         transactions=db.query(models.Transaction).filter(
             models.Transaction.created_at >= start_datetime,
-            models.Transaction.created_at <= end_datetime
+            models.Transaction.created_at <= end_datetime,
+            models.Transaction.user_id==current_user['id']
         ).all()
         
         total_amount = (

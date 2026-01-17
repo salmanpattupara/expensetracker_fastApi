@@ -12,11 +12,16 @@ class TransactionBase(BaseModel):
     category_id:Optional[int]
     
 class TransactionResponse(BaseModel):
+    id:int
+    user_id:int
     amount:int
     type:TransactionType
     description:str
     date:date #user input date
     category_id:Optional[int]
+    
+    class Config:
+        from_attributes = True
 
     
 class TransactionCreate(TransactionBase):
