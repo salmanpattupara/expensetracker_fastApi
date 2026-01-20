@@ -1,0 +1,54 @@
+from pydantic import BaseModel, field_validator
+from datetime import date
+from api.transaction_api.models import TransactionType
+from typing import Optional
+
+
+class TransactionBase(BaseModel):
+    amount:int
+    type:TransactionType
+    description:str
+    date:date #user input date
+    category_id:Optional[int]
+    
+class TransactionResponse(BaseModel):
+    id:int
+    user_id:int
+    amount:int
+    type:TransactionType
+    description:str
+    date:date #user input date
+    category_id:Optional[int]
+    
+    class Config:
+        from_attributes = True
+
+    
+class TransactionCreate(TransactionBase):
+    amount:int
+    type:TransactionType
+    description:str
+    date:date #user input date
+    category_id:Optional[int]   
+    
+    
+    @field_validator("date")
+    @classmethod
+    def no_future_dates(cls, v):
+        if v > date.today():
+            raise ValueError("Transaction date cannot be in the future")
+        return v
+    
+
+# class TransactionResponse(TransactionBase):
+   
+
+#     class Config:
+#         orm_mode = True
+
+class TrasactionUpdate(TransactionBase):
+    amount:int
+    type:TransactionType
+    description:str
+    date:date #user input date
+    category_id:Optional[int]
